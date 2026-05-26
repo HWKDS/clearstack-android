@@ -1,6 +1,8 @@
 package com.example.clearstackprototype1
 
 import android.os.Bundle
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,63 +30,95 @@ class MainActivity : ComponentActivity() {
 
             ClearstackPrototype1Theme {
 
-                NotificationScreen()
+                NotificationScreen(
+                    onEnableClick = {
+                        openNotificationSettings()
+                    }
+                )
             }
         }
+    }
+    private fun openNotificationSettings(){
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+        startActivity(intent)
     }
 }
 
 @Composable
-fun NotificationScreen() {
+fun NotificationScreen(
+    onEnableClick: () -> Unit
+) {
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        Button(
+            onClick = onEnableClick
+        ){
+            Text("Enable Notification Access")
+        }
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
 
-        items(NotificationStore.notifications) { notification ->
+        Text(
+            text = "ClearStack Notification",
+            style = MaterialTheme.typography.headlineMedium
+        )
 
-            NotificationCard(notification)
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
+
+        if(NotificationStore.threads.isEmpty()){
+            Text(
+                text = "No notifications yet..."
+            )
+        }
+
+        LazyColumn{
+
+            items(NotificationStore.threads){thread -> ThreadCard(thread)}
         }
     }
 }
 
 @Composable
-fun NotificationCard(
-    notification: NotificationData
-) {
-
+fun ThreadCard(
+    thread: ConversationThread
+){
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 12.dp)
     ) {
-
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-
             Text(
-                text = notification.appName,
+                text = thread.sender,
                 style = MaterialTheme.typography.titleMedium
             )
 
             Spacer(
-                modifier = Modifier.height(4.dp)
+                modifier = Modifier.padding(16.dp)
             )
 
             Text(
-                text = notification.title
+                text = "${thread.messages.size} new messages"
             )
 
             Spacer(
-                modifier = Modifier.height(4.dp)
+                modifier = Modifier.padding(16.dp)
             )
 
             Text(
-                text = notification.message
+                text =
+                    thread.messages.last().message
             )
+
         }
     }
 }
