@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+      - '[0-9]+*'
 
 jobs:
   build:
@@ -41,6 +42,7 @@ jobs:
           name: Release ${{ github.ref_name }}
           files: |
             app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/*.apk
             clearstack-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
