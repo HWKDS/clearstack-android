@@ -28,14 +28,16 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Create Project ZIP
+      - name: Create Source ZIP
         run: zip -r clearstack-source.zip . -x "*.git*"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           files: |
-            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/debug/app-debug.apk
             clearstack-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
