@@ -7,11 +7,9 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -25,19 +23,51 @@ jobs:
       - name: Grant Execute Permission
         run: chmod +x gradlew
 
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
       - name: Create Source ZIP
-        run: zip -r clearstack-source.zip . -x "*.git*"
+        run: zip -r clearstack-source.zip . -x "*.git*" ".gradle*" "build/*" ".idea/*" "*.iml"
+
+      - name: Get Release Notes
+        id: release_notes
+        run: |
+          TAG=${{ github.ref_name }}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
+          body: |
+            # Release ${{ github.ref_name }}
+            
+            ## Assets
+            - **app-release.apk** - Release build (optimized)
+            - **app-debug.apk** - Debug build (for testing)
+            - **clearstack-source.zip** - Source code archive
+            
+            ## Build Info
+            - Build Date: ${{ github.event.head_commit.timestamp }}
+            - Commit: ${{ github.sha }}
           files: |
+            app/build/outputs/apk/release/app-release.apk
             app/build/outputs/apk/debug/app-debug.apk
             clearstack-source.zip
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: apk-artifacts
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/apk/debug/app-debug.apk
