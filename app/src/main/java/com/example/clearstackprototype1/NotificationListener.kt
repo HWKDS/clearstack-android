@@ -9,12 +9,18 @@ class NotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         if(sbn == null) return
         val packageName = sbn.packageName
+        val appName = try{
+            val applicationInfo = packageManager.getApplicationInfo(packageName,0)
+            packageManager.getApplicationLabel(applicationInfo).toString()
+        }catch (e: Exception){
+            packageName
+        }
         val extras = sbn.notification.extras
         val title = extras.getString("android.title") ?: "No Title"
 
         val message = extras.getCharSequence("android.text")?.toString()?: "no message"
         val notificationData = NotificationData(
-            appName = packageName,
+            appName = appName,
             title = title,
             message = message,
             timeStamp = System.currentTimeMillis()
@@ -35,6 +41,7 @@ class NotificationListener : NotificationListenerService() {
             }
             else{
                 val newThread = ConversationThread(
+                    appName = appName,
                     sender = title,
                     messages = androidx.compose.runtime.mutableStateListOf(notificationData),
                     lastUpdated = System.currentTimeMillis()
@@ -48,7 +55,7 @@ class NotificationListener : NotificationListenerService() {
             "ClearStack",
             """
             -------------------------
-            App: $packageName
+            App: $appName
             Title: $title
             Message: $message
             -------------------------

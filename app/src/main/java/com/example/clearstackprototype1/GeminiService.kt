@@ -6,21 +6,32 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.concurrent.thread
+
 object GeminiService {
-    private const val API_KEY = "your api key"
+    private const val API_KEY = "AQ.Ab8RN6IgnnTEMFANdp4O1bbWfPiVVPdMwkr1DrO0bv3Ib0CX1w"
     private val client = OkHttpClient()
 
     fun summarizeMessages(
+        sender : String,
         messages: List<String>
     ): String{
         return try{
             val prompt = """
-                You are a notification summarizer.
-                
-                Summarize these messages in ONE SHORT sentence.
+                You are ClearStack, a personal notification assistant.
+                Your job is to read a conversation thread and tell the user what matters.
+                Rules:
+                - Write exactly one short sentence.
+                - Speak like a personal assistant.
+                - Mention urgency if present.
+                - Mention requests, money, meetings, deadlines or important actions.
+                - Ignore greetings, emojis and filler words.
+                - Do not repeat the messages verbatim.
+                - Do not use quotation marks.
+                Sender: ${sender}
                 Messages:
-                ${messages.joinToString("\n") }
-            """.trimIndent()
+                ${messages.joinToString("\n")}
+                """.trimIndent()
             val requestJson = JSONObject()
 
             val part = JSONObject()

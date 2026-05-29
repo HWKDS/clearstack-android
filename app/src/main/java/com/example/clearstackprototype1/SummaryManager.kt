@@ -7,7 +7,8 @@ object SummaryManager {
         Thread{
             val summary =
                 GeminiService.summarizeMessages(
-                    thread.messages.map{
+                    sender = thread.sender,
+                    messages = thread.messages.map{
                         it.message
                     }
                 )

@@ -1,6 +1,5 @@
 package com.example.clearstackprototype1
 
-import android.R
 
 data class NotificationData(
     val appName: String,
