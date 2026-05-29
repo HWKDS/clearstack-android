@@ -80,7 +80,10 @@ fun NotificationScreen(
 
         LazyColumn{
 
-            items(NotificationStore.threads){thread -> ThreadCard(thread)}
+            items(
+                items = NotificationStore.threads,
+                key = {it.sender}
+            ){thread -> ThreadCard(thread)}
         }
     }
 }
@@ -116,7 +119,11 @@ fun ThreadCard(
 
             Text(
                 text =
-                    thread.messages.last().message
+                    SummaryStore.summaries[thread.sender]
+                        ?: "Generating summary..."
+            )
+            Text(
+                text = "Updated: ${thread.lastUpdated}"
             )
 
         }

@@ -26,6 +26,11 @@ class NotificationListener : NotificationListenerService() {
                 }
             if(existingThread != null){
                 existingThread.messages.add(notificationData)
+                if(existingThread.messages.size >= 2){
+                    SummaryManager.UpdateSummary(
+                        existingThread
+                    )
+                }
                 existingThread.lastUpdated = System.currentTimeMillis()
             }
             else{
@@ -36,6 +41,7 @@ class NotificationListener : NotificationListenerService() {
                 )
 
                 NotificationStore.threads.add(0,newThread)
+                SummaryStore.summaries[title] = "waiting for more mssg..."
             }
         }
         Log.d(
