@@ -1,7 +1,6 @@
 package com.example.clearstackprototype1
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
 import android.os.Handler
 import android.os.Looper
 class NotificationListener : NotificationListenerService() {
@@ -51,15 +50,5 @@ class NotificationListener : NotificationListenerService() {
                 SummaryStore.summaries[title] = "waiting for more mssg..."
             }
         }
-        Log.d(
-            "ClearStack",
-            """
-            -------------------------
-            App: $appName
-            Title: $title
-            Message: $message
-            -------------------------
-            """.trimIndent()
-        )
     }
 }
