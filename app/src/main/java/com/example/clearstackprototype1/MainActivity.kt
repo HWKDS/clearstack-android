@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.example.clearstackprototype1.ui.theme.ClearstackPrototype1Theme
 
 class MainActivity : ComponentActivity() {
@@ -29,10 +30,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+        AppContextHolder.context =
+            applicationContext
 
         enableEdgeToEdge()
 
         hasPermission.value = isNotificationServiceEnabled()
+        Thread{
+            NotificationLoader
+                .loadThreads(this)
+        }.start()
         setContent {
 
             ClearstackPrototype1Theme {
@@ -105,12 +112,41 @@ fun NotificationScreen(
                 }
             }.thenByDescending { it.lastUpdated }
         )
+        val context = LocalContext.current
         LazyColumn{
-
             items(
                 items = sortedThreads,
                 key = {it.sender}
-            ){thread -> ThreadCard(thread)}
+            ){ thread ->
+                ThreadCard(
+                    thread = thread,
+                    onDelete = { selectedThread ->
+
+                        NotificationStore.threads.remove(
+                            selectedThread
+                        )
+                        SummaryStore.summaries.remove(
+                            selectedThread.sender
+                        )
+
+                        Thread {
+
+                            val dao =
+                                DatabaseProvider
+                                    .getDatabase(context)
+                                    .notificationDao()
+
+                            kotlinx.coroutines.runBlocking {
+
+                                dao.deleteThread(
+                                    selectedThread.sender
+                                )
+                            }
+
+                        }.start()
+                    }
+                )
+            }
         }
     }
 }
@@ -139,7 +175,8 @@ fun PermissionScreen(
 }
 @Composable
 fun ThreadCard(
-    thread: ConversationThread
+    thread: ConversationThread,
+    onDelete: (ConversationThread) -> Unit
 ){
     val summary = SummaryStore.summaries[thread.sender]?: "Generating summary..."
     val priority = PriorityManager.getPriority(summary)
@@ -187,6 +224,14 @@ fun ThreadCard(
             Text(
                 text = summary
             )
+
+            Button(
+                onClick = {
+                    onDelete(thread)
+                }
+            ){
+                Text("Delete")
+            }
 
 
         }

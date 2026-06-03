@@ -3,6 +3,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.os.Handler
 import android.os.Looper
+import kotlinx.coroutines.runBlocking
 class NotificationListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -24,6 +25,21 @@ class NotificationListener : NotificationListenerService() {
             message = message,
             timeStamp = System.currentTimeMillis()
         )
+        Thread{
+            val dao = DatabaseProvider
+                .getDatabase(this)
+                .notificationDao()
+            runBlocking {
+                dao.insertNotification(
+                    NotificationEntity(
+                        appName = appName,
+                        sender = title,
+                        message = message,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+            }
+        }.start()
         Handler(Looper.getMainLooper()).post{
             val existingThread =
                 NotificationStore.threads.find{

@@ -1,4 +1,7 @@
 package com.example.clearstackprototype1
+
+import kotlinx.coroutines.runBlocking
+
 object SummaryManager {
     private val lastSummaryTime = mutableMapOf<String, Long>()
     fun UpdateSummary(
@@ -23,6 +26,23 @@ object SummaryManager {
                     }
                 )
             SummaryStore.summaries[thread.sender] = summary
+
+            val priority =
+                PriorityManager
+                    .getPriority(summary)
+                    .name
+            val dao =
+                DatabaseProvider
+                    .getDatabase(
+                        AppContextHolder.context
+                    ).notificationDao()
+            runBlocking {
+                dao.updateSummary(
+                    sender = thread.sender,
+                    summary = summary,
+                    priority = priority
+                )
+            }
         }.start()
     }
 }
