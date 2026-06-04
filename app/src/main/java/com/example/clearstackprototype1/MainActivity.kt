@@ -10,13 +10,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -179,6 +183,9 @@ fun ThreadCard(
     onDelete: (ConversationThread) -> Unit
 ){
     val summary = SummaryStore.summaries[thread.sender]?: "Generating summary..."
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
     val priority = PriorityManager.getPriority(summary)
     val cardColor = when(priority){
         Priority.HIGH -> Color(0xFFFFEBEE)
@@ -188,10 +195,19 @@ fun ThreadCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
+            .padding(bottom = 12.dp)
+            .combinedClickable(
+                onClick = {
+                    // Future: opne conversation
+                }, onLongClick = {
+                    showDeleteDialog = true
+                }
+            ),
 
         colors = CardDefaults.cardColors(containerColor = cardColor)
-    ) {
+    )
+
+    {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -225,15 +241,42 @@ fun ThreadCard(
                 text = summary
             )
 
-            Button(
-                onClick = {
-                    onDelete(thread)
-                }
-            ){
-                Text("Delete")
-            }
+
 
 
         }
+    }
+    if(showDeleteDialog){
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+            },
+            title = {
+                Text("Delete Thread")
+            },
+            text = {
+                Text("Delete all notification from ${thread.sender}?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete(thread)
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+
     }
 }
