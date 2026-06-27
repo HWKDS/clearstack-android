@@ -46,6 +46,10 @@ object NotificationLoader {
                             it.timestamp
                         }
                 )
+            val first = messages.first()
+            if(first.summary.isNotBlank()){
+                SummaryStore.summaries[sender] = first.summary
+            }
             NotificationStore.threads.add(
                 thread
             )

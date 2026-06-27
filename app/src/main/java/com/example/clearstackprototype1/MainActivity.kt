@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
 
             ClearstackPrototype1Theme {
                 if(hasPermission.value){
-                    NotificationScreen()
+                    ClearStackNavigation()
                 }else{
                     PermissionScreen(
                         onEnableClick = {
@@ -81,6 +81,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NotificationScreen(
+    onThreadClick: (ConversationThread) -> Unit
 ) {
 
     Column(
@@ -124,6 +125,9 @@ fun NotificationScreen(
             ){ thread ->
                 ThreadCard(
                     thread = thread,
+                    onClick = {
+                        onThreadClick(thread)
+                    },
                     onDelete = { selectedThread ->
 
                         NotificationStore.threads.remove(
@@ -180,6 +184,7 @@ fun PermissionScreen(
 @Composable
 fun ThreadCard(
     thread: ConversationThread,
+    onClick: () -> Unit,
     onDelete: (ConversationThread) -> Unit
 ){
     val summary = SummaryStore.summaries[thread.sender]?: "Generating summary..."
@@ -197,9 +202,8 @@ fun ThreadCard(
             .fillMaxWidth()
             .padding(bottom = 12.dp)
             .combinedClickable(
-                onClick = {
-                    // Future: opne conversation
-                }, onLongClick = {
+                onClick = onClick,
+                onLongClick = {
                     showDeleteDialog = true
                 }
             ),

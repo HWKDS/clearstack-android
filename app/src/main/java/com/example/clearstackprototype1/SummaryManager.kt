@@ -1,5 +1,7 @@
 package com.example.clearstackprototype1
 
+import android.os.Handler
+import android.os.Looper
 import kotlinx.coroutines.runBlocking
 
 object SummaryManager {
@@ -9,13 +11,14 @@ object SummaryManager {
     ){
         val now = System.currentTimeMillis()
 
-        val lastCall = lastSummaryTime[thread.sender]?: 0
+        val Threadkey = "${thread.appName}:${thread.sender}"
+        val lastCall = lastSummaryTime[Threadkey]?: 0
 
         if(now - lastCall < 30000){
             return
         }
 
-        lastSummaryTime[thread.sender]= now
+        lastSummaryTime[Threadkey]= now
 
         Thread{
             val summary =
@@ -25,7 +28,13 @@ object SummaryManager {
                         it.message
                     }
                 )
-            SummaryStore.summaries[thread.sender] = summary
+            if(summary.isBlank()){
+                return@Thread
+            }
+
+            Handler(Looper.getMainLooper()).post{
+                SummaryStore.summaries[thread.sender] = summary
+            }
 
             val priority =
                 PriorityManager
