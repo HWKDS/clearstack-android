@@ -29,12 +29,22 @@ interface NotificationDao {
         """
     UPDATE notifications
     SET summary = :summary,
-        priority = :priority
+        priority = :priority,
+        tasks = :tasks,
+        payments = :payments,
+        meetings = :meetings,
+        reminders = :reminders,
+        otp = :otp
     WHERE sender = :sender
     """
     )suspend fun updateSummary(
         sender: String,
         summary: String,
-        priority: String
+        priority: String,
+        tasks: String,
+        payments: String,
+        meetings: String,
+        reminders: String,
+        otp: String
     )
 }

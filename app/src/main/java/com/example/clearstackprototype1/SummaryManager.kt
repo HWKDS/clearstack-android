@@ -3,6 +3,7 @@ package com.example.clearstackprototype1
 import android.os.Handler
 import android.os.Looper
 import kotlinx.coroutines.runBlocking
+import org.json.JSONArray
 
 object SummaryManager {
     private val lastSummaryTime = mutableMapOf<String, Long>()
@@ -21,24 +22,25 @@ object SummaryManager {
         lastSummaryTime[Threadkey]= now
 
         Thread{
-            val summary =
-                GeminiService.summarizeMessages(
+            val insight =
+                GeminiService.analyzeConversation(
                     sender = thread.sender,
                     messages = thread.messages.map{
                         it.message
                     }
                 )
-            if(summary.isBlank()){
+            if(insight.summary.isBlank()){
                 return@Thread
             }
 
             Handler(Looper.getMainLooper()).post{
-                SummaryStore.summaries[thread.sender] = summary
+                SummaryStore.summaries[thread.sender] = insight.summary
+                AiInsightStore.insights[thread.sender] = insight
             }
 
             val priority =
                 PriorityManager
-                    .getPriority(summary)
+                    .getPriority(insight.summary)
                     .name
             val dao =
                 DatabaseProvider
@@ -48,9 +50,14 @@ object SummaryManager {
             runBlocking {
                 dao.updateSummary(
                     sender = thread.sender,
-                    summary = summary,
-                    priority = priority
-                )
+                    summary = insight.summary,
+                    priority = insight.priority,
+                    tasks = JSONArray(insight.tasks).toString(),
+                    payments = JSONArray(insight.payments).toString(),
+                    meetings = JSONArray(insight.meetings).toString(),
+                    reminders = JSONArray(insight.reminders).toString(),
+                    otp = insight.otp?: ""
+                    )
             }
         }.start()
     }

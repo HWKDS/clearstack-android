@@ -12,5 +12,10 @@ data class NotificationEntity(
     val timestamp: Long,
 
     val summary: String = "",
-    val Priority: String = "LOW"
+    val Priority: String = "LOW",
+    val tasks: String = "[]",
+    val payments: String = "[]",
+    val meetings: String = "[]",
+    val reminders: String = "[]",
+    val otp: String = ""
 )

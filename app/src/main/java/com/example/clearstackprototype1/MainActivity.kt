@@ -105,15 +105,13 @@ fun NotificationScreen(
             )
         }
         val sortedThreads = NotificationStore.threads.sortedWith(
-            compareByDescending<ConversationThread>{
-                when(
-                    PriorityManager.getPriority(
-                        SummaryStore.summaries[it.sender]?: ""
-                    )
-                ) {
-                        Priority.HIGH -> 3
-                        Priority.MEDIUM -> 2
-                        Priority.LOW -> 1
+            compareByDescending<ConversationThread>{ thread ->
+                val priority =
+                    AiInsightStore.insights[thread.sender]?.priority ?: "LOW"
+                when(priority){
+                    "HIGH" -> 3
+                    "MEDIUM" -> 2
+                    else -> 1
                 }
             }.thenByDescending { it.lastUpdated }
         )
@@ -191,11 +189,12 @@ fun ThreadCard(
     var showDeleteDialog by remember {
         mutableStateOf(false)
     }
-    val priority = PriorityManager.getPriority(summary)
+    val priority =
+        AiInsightStore.insights[thread.sender]?.priority ?: "LOW"
     val cardColor = when(priority){
-        Priority.HIGH -> Color(0xFFFFEBEE)
-        Priority.MEDIUM -> Color(0xFFFFF8E1)
-        Priority.LOW -> Color(0xFFE8F5E9)
+        "HIGH" -> Color(0xFFFFEBEE)
+        "MEDIUM" -> Color(0xFFFFF8E1)
+        else -> Color(0xFFE8F5E9)
     }
     Card(
         modifier = Modifier
@@ -223,9 +222,9 @@ fun ThreadCard(
 
             Text(
                 text = when(priority){
-                    Priority.HIGH -> "🔴 HIGH"
-                    Priority.MEDIUM -> "🟠 MEDIUM"
-                    Priority.LOW -> "🟢 LOW"
+                    "HIGH" -> "🔴 HIGH"
+                    "MEDIUM" -> "🟠 MEDIUM"
+                    else -> "🟢 LOW"
                 }
             )
 

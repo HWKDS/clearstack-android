@@ -9,13 +9,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.input.pointer.stylusHoverIcon
+import androidx.compose.ui.modifier.modifierLocalConsumer
 
 @Composable
 fun ConversationScreen (
     thread: ConversationThread
 ){
+    val insight =
+        AiInsightStore.insights[thread.sender]
     val summary =
-        SummaryStore.summaries[thread.sender]
+        insight?.summary
+            ?: SummaryStore.summaries[thread.sender]
             ?: "Generating Ai summary..."
     Column(
         modifier = Modifier
@@ -42,6 +47,28 @@ fun ConversationScreen (
         Text(
             text = summary,
             style = MaterialTheme.typography.bodyLarge
+        )
+        InfoSection(
+            title = "📋 Tasks",
+            items = insight?.tasks ?: emptyList()
+        )
+        InfoSection(
+            title = "💰 Payments",
+            items = insight?.payments ?: emptyList()
+        )
+
+        InfoSection(
+            title = "📅 Meetings",
+            items = insight?.meetings ?: emptyList()
+        )
+
+        InfoSection(
+            title = "⏰ Reminders",
+            items = insight?.reminders ?: emptyList()
+        )
+        InfoValue(
+            title = "🔑 OTP",
+            value = insight?.otp
         )
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 16.dp)
@@ -96,4 +123,50 @@ fun MessageCard(
             )
         }
     }
+}
+
+@Composable
+fun InfoSection(
+    title: String,
+    items: List<String>
+){
+    if(items.isEmpty()) return
+    Spacer(modifier = Modifier.height(20.dp))
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium
+    )
+    Spacer(modifier = Modifier.height(20.dp))
+
+    items.forEach{ item ->
+        Text(
+            text = "• $item",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+    }
+}
+
+@Composable
+fun InfoValue(
+    title: String,
+    value: String?
+) {
+
+    if (value.isNullOrBlank()) return
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Text(
+        text = value,
+        style = MaterialTheme.typography.bodyLarge
+    )
+
 }
