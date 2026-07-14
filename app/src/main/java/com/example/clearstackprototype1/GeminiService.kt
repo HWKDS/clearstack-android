@@ -6,7 +6,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import kotlin.concurrent.thread
 
 object GeminiService {
     private const val API_KEY = "AQ.Ab8RN6I_eSdY2crfMKG3NUolv8FM4rOmUPrEMxsgFpDernalxg"
@@ -159,7 +158,6 @@ object GeminiService {
                 response.body?.string()
                     ?: throw Exception("No response")
 
-            println(responseBody)
 
             val json = JSONObject(responseBody)
 
@@ -193,7 +191,7 @@ object GeminiService {
             e.printStackTrace()
 
             AiInsight(
-                summary = "Analysis unavailable",
+                summary = "",
                 priority = "LOW",
                 tasks = emptyList(),
                 payments = emptyList(),

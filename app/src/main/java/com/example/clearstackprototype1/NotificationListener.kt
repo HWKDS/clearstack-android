@@ -48,7 +48,7 @@ class NotificationListener : NotificationListenerService() {
             if(existingThread != null){
                 existingThread.messages.add(notificationData)
                 if(existingThread.messages.size >= 2){
-                    SummaryManager.UpdateSummary(
+                    SummaryManager.updateSummary(
                         existingThread
                     )
                 }

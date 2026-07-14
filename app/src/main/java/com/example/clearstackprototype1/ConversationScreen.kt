@@ -1,16 +1,19 @@
 package com.example.clearstackprototype1
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.input.pointer.stylusHoverIcon
-import androidx.compose.ui.modifier.modifierLocalConsumer
 
 @Composable
 fun ConversationScreen (
@@ -18,6 +21,7 @@ fun ConversationScreen (
 ){
     val insight =
         AiInsightStore.insights[thread.sender]
+    val analysisState = AnalysisStateStore.states[thread.sender]?: AnalysisState.ANALYZING
     val summary =
         insight?.summary
             ?: SummaryStore.summaries[thread.sender]
@@ -44,10 +48,36 @@ fun ConversationScreen (
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = summary,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        when(analysisState){
+            AnalysisState.ANALYZING -> {
+                Text(
+                    text = "Analyzing conversation...",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+            AnalysisState.SUCCESS -> {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+            AnalysisState.FAILED -> {
+                Column {
+                    Text(
+                        text = "⚠ AI analysis failed.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            SummaryManager.updateSummary(thread)
+                        }
+                    ) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
         InfoSection(
             title = "📋 Tasks",
             items = insight?.tasks ?: emptyList()

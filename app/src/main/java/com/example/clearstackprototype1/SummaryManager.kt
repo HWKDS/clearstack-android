@@ -7,7 +7,7 @@ import org.json.JSONArray
 
 object SummaryManager {
     private val lastSummaryTime = mutableMapOf<String, Long>()
-    fun UpdateSummary(
+    fun updateSummary(
         thread: ConversationThread
     ){
         val now = System.currentTimeMillis()
@@ -20,7 +20,9 @@ object SummaryManager {
         }
 
         lastSummaryTime[Threadkey]= now
-
+        Handler(Looper.getMainLooper()).post{
+            AnalysisStateStore.states[thread.sender] = AnalysisState.ANALYZING
+        }
         Thread{
             val insight =
                 GeminiService.analyzeConversation(
@@ -30,18 +32,18 @@ object SummaryManager {
                     }
                 )
             if(insight.summary.isBlank()){
+                Handler(Looper.getMainLooper()).post {
+                    AnalysisStateStore.states[thread.sender] = AnalysisState.FAILED
+                }
                 return@Thread
             }
 
             Handler(Looper.getMainLooper()).post{
                 SummaryStore.summaries[thread.sender] = insight.summary
                 AiInsightStore.insights[thread.sender] = insight
+                AnalysisStateStore.states[thread.sender] = AnalysisState.SUCCESS
             }
 
-            val priority =
-                PriorityManager
-                    .getPriority(insight.summary)
-                    .name
             val dao =
                 DatabaseProvider
                     .getDatabase(
