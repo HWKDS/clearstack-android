@@ -4,8 +4,8 @@ data class AiInsight (
     val summary: String,
     val priority: String,
     val tasks: List<String>,
-    val payments: List<String>,
-    val meetings: List<String>,
-    val reminders: List<String>,
+    val payments: List<Payment>,
+    val meetings: List<Meeting>,
+    val reminders: List<Reminder>,
     val otp: String?
 )

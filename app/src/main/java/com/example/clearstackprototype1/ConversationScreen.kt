@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,6 +22,7 @@ fun ConversationScreen (
 ){
     val insight =
         AiInsightStore.insights[thread.sender]
+    val refreshFailed = RefreshStateStore.refreshFailed[thread.sender] ?: false
     val analysisState = AnalysisStateStore.states[thread.sender]?: AnalysisState.ANALYZING
     val summary =
         insight?.summary
@@ -50,16 +52,39 @@ fun ConversationScreen (
         Spacer(modifier = Modifier.height(8.dp))
         when(analysisState){
             AnalysisState.ANALYZING -> {
-                Text(
-                    text = "Analyzing conversation...",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+               if(insight == null){
+                   Text(
+                       text = "Analyzing conversation...",
+                       style = MaterialTheme.typography.bodyLarge
+                   )
+               }else{
+                   Text(
+                       text = summary,
+                       style = MaterialTheme.typography.bodyLarge
+                   )
+                   if(refreshFailed){
+                       Spacer(modifier = Modifier.height(8.dp))
+
+                       Text(
+                           text = "⚠ Couldn't refresh analysis.",
+                           color = MaterialTheme.colorScheme.error
+                       )
+                   }
+               }
             }
             AnalysisState.SUCCESS -> {
                 Text(
                     text = summary,
                     style = MaterialTheme.typography.bodyLarge
                 )
+                if(refreshFailed){
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "⚠ Couldn't refresh analysis.",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
             AnalysisState.FAILED -> {
                 Column {
@@ -68,8 +93,9 @@ fun ConversationScreen (
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    androidx.compose.material3.Button(
+                    Button(
                         onClick = {
+                            RefreshStateStore.refreshFailed[thread.sender] = false
                             SummaryManager.updateSummary(thread)
                         }
                     ) {
@@ -82,19 +108,14 @@ fun ConversationScreen (
             title = "📋 Tasks",
             items = insight?.tasks ?: emptyList()
         )
-        InfoSection(
-            title = "💰 Payments",
-            items = insight?.payments ?: emptyList()
+        PaymentSection(
+            payments = insight?.payments ?: emptyList()
         )
-
-        InfoSection(
-            title = "📅 Meetings",
-            items = insight?.meetings ?: emptyList()
+        MeetingSection(
+            meetings = insight?.meetings ?: emptyList()
         )
-
-        InfoSection(
-            title = "⏰ Reminders",
-            items = insight?.reminders ?: emptyList()
+        ReminderSection(
+            reminders = insight?.reminders ?: emptyList()
         )
         InfoValue(
             title = "🔑 OTP",
@@ -176,7 +197,93 @@ fun InfoSection(
         )
     }
 }
+@Composable
+fun PaymentSection(
+    payments: List<Payment>
+){
+    if(payments.isEmpty()) return
+    Spacer(modifier = Modifier.height(20.dp))
+    Text(
+        text = "💰 Payments",
+        style = MaterialTheme.typography.titleMedium
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    payments.forEach { payment ->
+        Text(
+            text = "₹${payment.amount}",
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = "Reason: ${payment.reason}",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+@Composable
+fun MeetingSection(
+    meetings: List<Meeting>
+) {
 
+    if (meetings.isEmpty()) return
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Text(
+        text = "📅 Meetings",
+        style = MaterialTheme.typography.titleMedium
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    meetings.forEach { meeting ->
+
+        Text(
+            text = meeting.title,
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        if (!meeting.date.isNullOrBlank()) {
+            Text("Date: ${meeting.date}")
+        }
+
+        if (!meeting.time.isNullOrBlank()) {
+            Text("Time: ${meeting.time}")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+@Composable
+fun ReminderSection(
+    reminders: List<Reminder>
+) {
+
+    if (reminders.isEmpty()) return
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Text(
+        text = "⏰ Reminders",
+        style = MaterialTheme.typography.titleMedium
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    reminders.forEach { reminder ->
+
+        Text(
+            text = reminder.text,
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        if (!reminder.dueDate.isNullOrBlank()) {
+            Text("Due: ${reminder.dueDate}")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
 @Composable
 fun InfoValue(
     title: String,
