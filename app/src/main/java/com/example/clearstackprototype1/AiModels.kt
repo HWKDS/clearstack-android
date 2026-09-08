@@ -8,12 +8,12 @@ data class Payment(
 
 data class Meeting(
     val title: String,
-    val date: String?,
-    val time: String?,
-    val location: String?
+    val date: String,
+    val time: String,
+    val location: String
 )
 
 data class Reminder(
     val text: String,
-    val dueDate: String?
+    val dueDate: String
 )

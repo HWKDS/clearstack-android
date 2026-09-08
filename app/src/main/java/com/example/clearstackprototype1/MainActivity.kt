@@ -1,11 +1,14 @@
 package com.example.clearstackprototype1
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,7 +27,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,46 +38,96 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.navigation.NavHostController
 import com.example.clearstackprototype1.ui.theme.ClearstackPrototype1Theme
+import java.io.File
 
 class MainActivity : ComponentActivity() {
 
-    private var hasPermission = mutableStateOf(false)
+    // Class properties to hold UI state that can be accessed by private functions
+    private var hasPermission by mutableStateOf(false)
+    private var startDestination by mutableStateOf("notifications")
+
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
-        AppContextHolder.context =
-            applicationContext
-
         enableEdgeToEdge()
 
-        hasPermission.value = isNotificationServiceEnabled()
-        Thread{
-            NotificationLoader
-                .loadThreads(this)
-        }.start()
-        setContent {
+        // Initialize state based on current permission and model existence
+        hasPermission = isNotificationServiceEnabled()
+        startDestination = if (hasPermission) {
+            val modelFile = File(filesDir, "gemma3-1b-it.litertlm")
+            if (modelFile.exists()) "notifications" else "model_download"
+        } else {
+            "permission"
+        }
 
+        setContent {
             ClearstackPrototype1Theme {
-                if(hasPermission.value){
-                    ClearStackNavigation()
-                }else{
-                    PermissionScreen(
-                        onEnableClick = {
-                            openNotificationSettings()
+                // Check permission on resume to detect changes from settings
+                DisposableEffect(Unit) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            val newHasPermission = isNotificationServiceEnabled()
+                            if (hasPermission != newHasPermission) {
+                                hasPermission = newHasPermission
+                                val modelFile = File(filesDir, "gemma3-1b-it.litertlm")
+                                startDestination = if (newHasPermission) {
+                                    if (modelFile.exists()) "notifications" else "model_download"
+                                } else {
+                                    "permission"
+                                }
+                            }
                         }
-                    )
+                    }
+                    ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+                    onDispose {
+                        ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
+                    }
                 }
+
+                // Also check for model existence when hasPermission changes
+                LaunchedEffect(hasPermission) {
+                    if (hasPermission) {
+                        val modelFile = File(filesDir, "gemma3-1b-it.litertlm")
+                        startDestination = if (modelFile.exists()) "notifications" else "model_download"
+                    }
+                }
+
+                // Start loading notifications in the background
+                LaunchedEffect(Unit) {
+                    Thread {
+                        NotificationLoader.loadThreads(this@MainActivity)
+                    }.start()
+                }
+
+                ClearStackNavigation(startDestination = startDestination)
             }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        hasPermission.value = isNotificationServiceEnabled()
+    private fun checkPermissionAndUpdateState() {
+        val newHasPermission = isNotificationServiceEnabled()
+        if (hasPermission != newHasPermission) {
+            hasPermission = newHasPermission
+            updateStartDestination(newHasPermission)
+        }
+    }
+    private fun updateStartDestination(hasPermission: Boolean) {
+        if (!hasPermission) {
+            startDestination = "permission"
+        } else {
+            val modelFile = File(filesDir, "gemma3-1b-it.litertlm")
+            startDestination = if (modelFile.exists()) "notifications" else "model_download"
+        }
     }
 
+    private fun checkModelAndUpdateDestination() {
+        val modelFile = File(filesDir, "gemma3-1b-it.litertlm")
+        startDestination = if (modelFile.exists()) "notifications" else "model_download"
+    }
 
     // check if notification setting is enabled
     private fun isNotificationServiceEnabled(): Boolean{
@@ -155,6 +210,7 @@ fun NotificationScreen(
                                 dao.deleteThread(
                                     selectedThread.sender
                                 )
+
                             }
 
                         }.start()
@@ -164,6 +220,7 @@ fun NotificationScreen(
         }
     }
 }
+
 @Composable
 fun PermissionScreen(
     onEnableClick: () -> Unit
@@ -187,6 +244,7 @@ fun PermissionScreen(
         }
     }
 }
+
 @Composable
 fun ThreadCard(
     thread: ConversationThread,
@@ -215,7 +273,6 @@ fun ThreadCard(
                     showDeleteDialog = true
                 }
             ),
-
         colors = CardDefaults.cardColors(containerColor = cardColor)
     )
 
@@ -226,7 +283,6 @@ fun ThreadCard(
 
             Text(
                 text = thread.appName,
-
             )
 
             Text(
@@ -241,6 +297,7 @@ fun ThreadCard(
                 text = thread.sender,
                 style = MaterialTheme.typography.titleMedium
             )
+
             Text(
                 text = "${thread.messages.size} messages • ${TimeUtils.getTimeAgo(thread.lastUpdated)}"
             )
@@ -261,8 +318,6 @@ fun ThreadCard(
                     Text("⚠ Analysis failed. Tap to retry.")
                 }
             }
-
-
 
 
         }
@@ -297,7 +352,7 @@ fun ThreadCard(
                     Text("Cancel")
                 }
             }
-        )
 
+        )
     }
 }

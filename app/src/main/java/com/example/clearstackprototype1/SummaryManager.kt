@@ -2,6 +2,8 @@ package com.example.clearstackprototype1
 
 import android.os.Handler
 import android.os.Looper
+import com.example.clearstackprototype1.AppContextHolder
+import com.example.clearstackprototype1.GemmaService
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 
@@ -23,7 +25,7 @@ object SummaryManager {
         Thread{
             try{
                 val insight =
-                    GeminiService.analyzeConversation(
+                    GemmaService.analyzeConversation(
                         sender = thread.sender,
                         messages = thread.messages.map{
                             it.message
@@ -51,10 +53,11 @@ object SummaryManager {
                     AnalysisStateStore.states[thread.sender] = AnalysisState.SUCCESS
                 }
 
+                val context = AppContextHolder.context ?: return@Thread
                 val dao =
                     DatabaseProvider
                         .getDatabase(
-                            AppContextHolder.context
+                            context
                         ).notificationDao()
                 runBlocking {
                     dao.updateSummary(
