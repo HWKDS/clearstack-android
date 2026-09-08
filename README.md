@@ -1,61 +1,135 @@
-# ClearStack Android Prototype
+# ClearStack Android
 
-ClearStack is an AI-powered notification management app that listens to incoming notifications and uses Google's Gemini AI to summarize conversation threads into concise, one-sentence summaries.
+ClearStack is an Android prototype that listens for notifications, groups them by sender, and uses a local on-device Gemma AI model to turn a conversation thread into a concise, structured summary.
 
-## 🚀 Features
+The app is designed for mobile workflows where a user wants a quick read on what is happening across messages, reminders, payments, tasks, and meetings without needing to manually scroll through every notification.
 
-- **Notification Listener**: Automatically captures incoming notifications from other apps.
-- **Smart Threading**: Groups notifications by sender/conversation.
-- **AI Summarization**: Uses Gemini 2.5 Flash to summarize multiple messages into a single, easy-to-read sentence.
-- **Jetpack Compose UI**: A modern, responsive interface built with the latest Android tools.
+## Features
 
-## 🛠️ Tech Stack
+- Notification listener that captures incoming app notifications
+- Thread grouping by sender/conversation
+- Local AI summarization with Google LiteRT LM / Gemma
+- Structured insight extraction for:
+  - summary text
+  - priority level
+  - tasks
+  - payments
+  - meetings
+  - reminders
+  - OTP detection
+- Room database persistence for notification history and saved summaries
+- Jetpack Compose-based UI
+- Model download flow for first-run setup
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose with Material 3
-- **Networking**: OkHttp
-- **AI Integration**: Google Generative AI (Gemini API)
-- **CI/CD**: GitHub Actions for automated APK builds and releases
+## Tech stack
 
-## ⚙️ Setup & Installation
+- Kotlin
+- Jetpack Compose + Material 3
+- Android Notification Listener Service
+- Room database
+- Google LiteRT LM (`com.google.ai.edge.litertlm`)
+- Gradle + Android Gradle Plugin
 
-### 1. Prerequisites
-- Android Studio Ladybug (or newer)
-- Android SDK 28 (Android 9.0) or higher
-- A Google Gemini API Key (Get one at [Google AI Studio](https://aistudio.google.com/))
+## Project structure
 
-### 2. Clone the Repository
+```text
+clearstack-android/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/example/clearstackprototype1/
+│   │   │   │   ├── MainActivity.kt
+│   │   │   │   ├── NotificationListener.kt
+│   │   │   │   ├── SummaryManager.kt
+│   │   │   │   ├── GemmaService.kt
+│   │   │   │   ├── ModelDownloadScreen.kt
+│   │   │   │   ├── ClearStackDatabase.kt
+│   │   │   │   └── ...
+│   │   │   └── AndroidManifest.xml
+│   │   ├── androidTest/
+│   │   └── test/
+│   └── build.gradle.kts
+├── gradle/
+├── build.gradle.kts
+├── gradle.properties
+├── settings.gradle.kts
+├── gradlew
+├── gradlew.bat
+├── .gitignore
+├── README.md
+└── local.properties
+```
+
+## How it works
+
+1. The app registers a `NotificationListenerService`.
+2. Incoming notifications are stored in a Room database and grouped into conversation threads.
+3. When a thread has enough messages, the app sends the text to `GemmaService`.
+4. The model returns JSON with a one-line summary and extracted information such as tasks, reminders, payment details, meetings, and OTP codes.
+5. The result is saved in app state and DB for display in the Compose UI.
+
+## Prerequisites
+
+- Android Studio with Android SDK configured
+- JDK 11+ (the app targets Java 11)
+- A device or emulator running Android 9+ (min SDK 28)
+- Internet access for downloading the initial model asset
+
+## Getting started
+
+### 1. Clone the repo
+
 ```bash
-git clone https://github.com/your-username/clearstack-android.git
+git clone https://github.com/HWKDS/clearstack-android.git
 cd clearstack-android
 ```
 
-### 3. Configure API Key
-Before running the app, you must add your Gemini API key:
-1. Open the project in Android Studio.
-2. Navigate to `app/src/main/java/com/example/clearstackprototype1/GeminiService.kt`.
-3. Locate the `API_KEY` constant:
-   ```kotlin
-   private const val API_KEY = "your_api_key_here"
-   ```
-4. Replace `"your_api_key_here"` with your actual API key.
+### 2. Open in Android Studio
 
-### 4. Build and Run
-- Sync the project with Gradle files.
-- Connect an Android device or start an emulator.
-- Click **Run 'app'** in Android Studio.
+Open the project root in Android Studio and let Gradle sync complete.
 
-## 📱 How to Use
+### 3. Grant notification access
 
-1. **Enable Notification Access**: When you first open the app, click the **"Enable Notification Access"** button. This will take you to Android settings where you must toggle on access for **ClearStack Prototype**.
-2. **Receive Messages**: The app will now listen for incoming notifications.
-3. **View Summaries**: As you receive multiple messages from the same sender, ClearStack will automatically generate an AI summary and display it on the main screen.
+When the app launches, it checks whether notification access is enabled. If not, open the Android notification access settings and allow access for the app.
 
-## 🤖 CI/CD (GitHub Actions)
+### 4. Download the local model
 
-This project includes automated workflows:
-- **Build**: Every push to `main` builds the APK and saves it as an Action Artifact.
-- **Release**: Pushing a tag (e.g., `v1.0`, `2`) triggers a GitHub Release with the APK and source code attached.
+The app includes a model download flow and downloads the Gemma model bundle into the app's internal files directory:
 
----
-*Note: This is a prototype version for demonstration purposes.*
+```text
+filesDir/gemma3-1b-it.litertlm
+```
+
+The current download logic points to a GitHub Release asset:
+
+```text
+https://github.com/HWKDS/clearstack-android/releases/download/model-v1/gemma3-1b-it-int4.litertlm
+```
+
+If the model is missing, the app will prompt the user to download it before using AI summarization.
+
+### 5. Build and run
+
+From Android Studio:
+
+- choose a connected device or emulator
+- select the app module
+- click Run
+
+Or from the terminal:
+
+```bash
+./gradlew assembleDebug
+```
+
+## Important notes
+
+- This is a prototype app and not a production-ready privacy or security product.
+- Notification access is required to read sender messaging content.
+- The model runs locally in the app's files directory; network is only needed for the initial model download.
+- Some notification payloads may be empty or inconsistent depending on the source app.
+
+## License
+
+No explicit license file was found in this repository, so usage rights are currently unspecified unless otherwise stated by the project owner.
+
