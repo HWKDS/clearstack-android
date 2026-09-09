@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="ClearStack turns notification noise into clear, private summaries on Android.">
+    <meta name="theme-color" content="#f7faf8">
+    <link rel="canonical" href="https://app.hwkds.dev/">
+    <meta property="og:title" content="ClearStack | Clearer notifications">
+    <meta property="og:description" content="Private, on-device notification summaries for Android.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://app.hwkds.dev/">
     <title>ClearStack | Clearer notifications</title>
     <link rel="icon" href="https://raw.githubusercontent.com/HWKDS/clearstack-android/main/app/src/main/ic_launcher-playstore.png">
     <link rel="stylesheet" href="styles.css">
@@ -53,21 +59,52 @@
         <article><span class="feature-number">02</span><h2>AI that stays local</h2><p>Gemma runs on your device. Your notifications stay yours.</p></article>
         <article><span class="feature-number">03</span><h2>Less scrolling, more doing</h2><p>Get the signal quickly with concise summaries and extracted action items.</p></article>
       </section>
+
+      <section class="release-section shell" id="download">
+        <div>
+          <p class="eyebrow">Latest release</p>
+          <h2 id="release-title">ClearStack for Android</h2>
+          <p id="release-description">Download the latest build directly from GitHub Releases.</p>
+        </div>
+        <div class="release-details">
+          <span id="release-version">Checking release…</span>
+          <a class="button primary" id="release-download" href="https://github.com/HWKDS/clearstack-android/releases/latest" target="_blank" rel="noreferrer">Download APK <span aria-hidden="true">↓</span></a>
+          <a class="release-notes" id="release-notes" href="https://github.com/HWKDS/clearstack-android/releases" target="_blank" rel="noreferrer">Read release notes ↗</a>
+        </div>
+      </section>
+
+      <section class="install shell">
+        <p class="eyebrow">Install in three steps</p>
+        <div class="install-grid">
+          <div><b>01</b><h2>Download the APK</h2><p>Use the button above to get the newest release from GitHub.</p></div>
+          <div><b>02</b><h2>Allow installation</h2><p>If Android asks, allow your browser to install apps from this source.</p></div>
+          <div><b>03</b><h2>Enable notification access</h2><p>Open ClearStack and grant access so it can organize your notifications locally.</p></div>
+        </div>
+      </section>
     </main>
 
     <footer class="shell"><span>© 2026 ClearStack</span><span>Open source Android prototype</span></footer>
     <script>
       const button = document.getElementById('download-button');
       const status = document.getElementById('release-status');
-      fetch('https://api.github.com/repos/HWKDS/clearstack-android/releases/latest')
+      fetch('https://api.github.com/repos/HWKDS/clearstack-android/releases/latest', {
+        headers: { Accept: 'application/vnd.github+json' }
+      })
         .then(response => {
           if (!response.ok) throw new Error('Release unavailable');
           return response.json();
         })
         .then(release => {
           const apk = release.assets.find(asset => asset.name.endsWith('.apk'));
+          document.getElementById('release-title').textContent = `ClearStack ${release.tag_name}`;
+          document.getElementById('release-version').textContent = `${release.tag_name} · ${new Date(release.published_at).toLocaleDateString()}`;
+          document.getElementById('release-notes').href = release.html_url;
+          if (release.body) {
+            document.getElementById('release-description').textContent = release.body.split('\n').find(line => line.trim()) || 'The latest ClearStack Android build is ready.';
+          }
           if (apk) {
             button.href = apk.browser_download_url;
+            document.getElementById('release-download').href = apk.browser_download_url;
             status.textContent = `${release.tag_name} · APK download`;
           } else {
             status.textContent = `${release.tag_name} · See release assets`;
@@ -75,6 +112,7 @@
         })
         .catch(() => {
           status.textContent = 'Latest release available on GitHub';
+          document.getElementById('release-version').textContent = 'Release details unavailable';
         });
     </script>
   </body>

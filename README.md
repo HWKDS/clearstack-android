@@ -131,7 +131,13 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The Android release workflow attaches an installable `ClearStack-<tag>.apk` and a source archive to the GitHub Release. The website in `website/` is deployed to GitHub Pages automatically when it changes. Its Android download button reads the latest release from the GitHub API, so it always points to the newest APK.
+The Android release workflow attaches an installable `ClearStack-<tag>.apk` and a source archive to the GitHub Release. The website in `website/` is deployed to Vercel automatically from the `main` branch. Its download button reads the latest release from the GitHub API, so it always points to the newest APK.
+
+### Vercel and custom domain
+
+Create a new Vercel project connected to this repository. Set the project root to the repository root (the included `vercel.json` publishes `website/`), leave the build command empty, and deploy. In Vercel, add `app.hwkds.dev` under **Project Settings → Domains**. Add the DNS record Vercel displays at your DNS provider, then wait for Vercel to issue the HTTPS certificate.
+
+The public site will be available at `https://app.hwkds.dev`. Pushes to `main` deploy the website; pushing a version tag publishes a new APK release that the site will discover automatically.
 
 ## Important notes
 
