@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ClearStack turns notification noise into clear, private summaries on Android.">
+    <title>ClearStack | Clearer notifications</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/HWKDS/clearstack-android/main/app/src/main/ic_launcher-playstore.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="nav shell">
+      <a class="brand" href="/" aria-label="ClearStack home">
+        <img src="https://raw.githubusercontent.com/HWKDS/clearstack-android/main/app/src/main/ic_launcher-playstore.png" alt="">
+        <span>clearstack</span>
+      </a>
+      <a class="github-link" href="https://github.com/HWKDS/clearstack-android">View on GitHub <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main>
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse"></span> Private by design</p>
+          <h1>Make room for what <em>matters.</em></h1>
+          <p class="lede">ClearStack listens to your notifications, groups the noise, and turns conversations into clear, useful summaries right on your device.</p>
+          <div class="actions">
+            <a class="button primary" id="download-button" href="https://github.com/HWKDS/clearstack-android/releases/latest" target="_blank" rel="noreferrer">
+              <span>Download for Android</span><span aria-hidden="true">↓</span>
+            </a>
+            <a class="button secondary" href="https://github.com/HWKDS/clearstack-android/releases" target="_blank" rel="noreferrer">View all releases</a>
+          </div>
+          <p class="release-status" id="release-status">Looking up the latest release…</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="glow"></div>
+          <div class="phone">
+            <div class="phone-top"></div>
+            <div class="phone-header"><span>Today</span><span class="tiny-dot"></span></div>
+            <div class="summary-card">
+              <span class="card-icon blue">✦</span>
+              <div><strong>Your day, distilled</strong><small>12 notifications · 3 threads</small></div>
+            </div>
+            <div class="thread"><span class="avatar green">W</span><div><strong>Work updates</strong><small>Meeting moved to 3:30 PM</small></div><b>2</b></div>
+            <div class="thread"><span class="avatar purple">P</span><div><strong>Payments</strong><small>Electricity bill due Friday</small></div><b>1</b></div>
+            <div class="thread"><span class="avatar orange">R</span><div><strong>Reminders</strong><small>Pick up groceries on the way</small></div><b>4</b></div>
+            <div class="phone-nav"><span>⌂</span><span class="active">✦</span><span>⚙</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="features shell">
+        <article><span class="feature-number">01</span><h2>Everything in one view</h2><p>Messages, reminders, payments, and meetings organized by conversation.</p></article>
+        <article><span class="feature-number">02</span><h2>AI that stays local</h2><p>Gemma runs on your device. Your notifications stay yours.</p></article>
+        <article><span class="feature-number">03</span><h2>Less scrolling, more doing</h2><p>Get the signal quickly with concise summaries and extracted action items.</p></article>
+      </section>
+    </main>
+
+    <footer class="shell"><span>© 2026 ClearStack</span><span>Open source Android prototype</span></footer>
+    <script>
+      const button = document.getElementById('download-button');
+      const status = document.getElementById('release-status');
+      fetch('https://api.github.com/repos/HWKDS/clearstack-android/releases/latest')
+        .then(response => {
+          if (!response.ok) throw new Error('Release unavailable');
+          return response.json();
+        })
+        .then(release => {
+          const apk = release.assets.find(asset => asset.name.endsWith('.apk'));
+          if (apk) {
+            button.href = apk.browser_download_url;
+            status.textContent = `${release.tag_name} · APK download`;
+          } else {
+            status.textContent = `${release.tag_name} · See release assets`;
+          }
+        })
+        .catch(() => {
+          status.textContent = 'Latest release available on GitHub';
+        });
+    </script>
+  </body>
+</html>

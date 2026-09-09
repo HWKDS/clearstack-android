@@ -122,6 +122,17 @@ Or from the terminal:
 ./gradlew assembleDebug
 ```
 
+## CI/CD and downloads
+
+GitHub Actions runs unit tests and a debug build for every push and pull request. To publish a downloadable release, create and push a tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The Android release workflow attaches an installable `ClearStack-<tag>.apk` and a source archive to the GitHub Release. The website in `website/` is deployed to GitHub Pages automatically when it changes. Its Android download button reads the latest release from the GitHub API, so it always points to the newest APK.
+
 ## Important notes
 
 - This is a prototype app and not a production-ready privacy or security product.
@@ -132,4 +143,3 @@ Or from the terminal:
 ## License
 
 No explicit license file was found in this repository, so usage rights are currently unspecified unless otherwise stated by the project owner.
-

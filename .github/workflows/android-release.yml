@@ -1,10 +1,10 @@
-name: Android Release CI
+name: Android Release
 
 on:
   push:
     tags:
       - 'v*'
-      - '[0-9]+*'
+      - '[0-9]*'
   workflow_dispatch:
 
 permissions:
@@ -28,11 +28,15 @@ jobs:
       - name: Grant Execute Permission
         run: chmod +x gradlew
 
-      - name: Build Debug APK
+      - name: Build installable APK
         run: ./gradlew assembleDebug
 
-      - name: Create Source ZIP
-        run: zip -r clearstack-source.zip . -x "*.git*" ".gradle*" "build/*" ".idea/*"
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir -p release
+          cp app/build/outputs/apk/debug/app-debug.apk "release/ClearStack-${GITHUB_REF_NAME}.apk"
+          git archive --format=zip --output=release/clearstack-source.zip HEAD
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -41,7 +45,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: |
-            app/build/outputs/apk/debug/*.apk
-            clearstack-source.zip
+            release/*.apk
+            release/clearstack-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
